@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Prediction History</title>
+<style>
+  :root {
+    --card: #161c2c;
+    --card-border: #262e42;
+    --accent: #4f7cff;
+    --accent-2: #7c5cff;
+    --text: #e7ebf5;
+    --muted: #8a91a8;
+    --danger: #ff5c7a;
+    --safe: #38d996;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: radial-gradient(circle at top, #1a2138 0%, #0f1420 60%);
+    color: var(--text);
+    min-height: 100vh;
+    padding-bottom: 40px;
+  }
+  nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 40px;
+    border-bottom: 1px solid var(--card-border);
+    margin-bottom: 30px;
+  }
+  nav .logo { font-weight: 700; font-size: 18px; }
+  nav a {
+    color: var(--muted);
+    text-decoration: none;
+    margin-left: 24px;
+    font-size: 14px;
+  }
+  nav a:hover { color: var(--text); }
+
+  .wrap { max-width: 1150px; margin: 0 auto; padding: 0 20px; }
+  h1 {
+    font-size: 26px;
+    margin-bottom: 24px;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    display: inline-block;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 14px;
+    overflow: hidden;
+  }
+  th, td {
+    padding: 12px 14px;
+    text-align: left;
+    font-size: 13px;
+    border-bottom: 1px solid var(--card-border);
+    white-space: nowrap;
+  }
+  th {
+    color: var(--muted);
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    background: rgba(255,255,255,0.02);
+  }
+  tr:last-child td { border-bottom: none; }
+  .badge {
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .badge.high { background: rgba(255,92,122,0.15); color: var(--danger); }
+  .badge.low { background: rgba(56,217,150,0.15); color: var(--safe); }
+
+  .empty {
+    text-align: center;
+    color: var(--muted);
+    padding: 60px 0;
+  }
+  .table-scroll { overflow-x: auto; }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">NPA Predictor</div>
+  <div>
+    <a href="/">Home</a>
+    <a href="/predictor">Predictor</a>
+    <a href="/logout">Logout</a>
+  </div>
+</nav>
+
+<div class="wrap">
+  <h1>Prediction History</h1>
+
+  {% if records %}
+  <div class="table-scroll">
+  <table>
+    <tr>
+      <th>Time</th>
+      <th>Applicant</th>
+      <th>Loan Amt</th>
+      <th>Grade</th>
+      <th>Income</th>
+      <th>DTI</th>
+      <th>Int. Rate</th>
+      <th>Result</th>
+      <th>Risk %</th>
+    </tr>
+    {% for r in records %}
+    <tr>
+      <td>{{ r['timestamp'] }}</td>
+      <td>{{ r['applicant_name'] }}</td>
+      <td>${{ r['loan_amnt'] }}</td>
+      <td>{{ r['grade'] }}</td>
+      <td>${{ r['annual_inc'] }}</td>
+      <td>{{ r['dti'] }}</td>
+      <td>{{ r['int_rate'] }}%</td>
+      <td>
+        <span class="badge {% if 'High' in r['result'] %}high{% else %}low{% endif %}">
+          {% if 'High' in r['result'] %}High Risk{% else %}Low Risk{% endif %}
+        </span>
+      </td>
+      <td>{{ r['risk_percent'] }}%</td>
+    </tr>
+    {% endfor %}
+  </table>
+  </div>
+  {% else %}
+  <div class="empty">No predictions made yet. <a href="/predictor" style="color: var(--accent);">Try the predictor →</a></div>
+  {% endif %}
+</div>
+
+</body>
+</html>

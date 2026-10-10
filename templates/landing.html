@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>NPA Risk Predictor</title>
+<style>
+  :root {
+    --card: #161c2c;
+    --card-border: #262e42;
+    --accent: #4f7cff;
+    --accent-2: #7c5cff;
+    --accent-3: #38d9c9;
+    --text: #e7ebf5;
+    --muted: #8a91a8;
+    --danger: #ff5c7a;
+    --safe: #38d996;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #0a0e18;
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  .glow {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(90px);
+    opacity: 0.35;
+    z-index: 0;
+    pointer-events: none;
+  }
+  .glow-1 {
+    width: 500px; height: 500px;
+    background: var(--accent);
+    top: -150px; left: -100px;
+    animation: float1 14s ease-in-out infinite;
+  }
+  .glow-2 {
+    width: 450px; height: 450px;
+    background: var(--accent-2);
+    top: 200px; right: -150px;
+    animation: float2 16s ease-in-out infinite;
+  }
+  .glow-3 {
+    width: 400px; height: 400px;
+    background: var(--accent-3);
+    bottom: -150px; left: 30%;
+    animation: float3 18s ease-in-out infinite;
+  }
+  @keyframes float1 {
+    0%, 100% { transform: translate(0, 0); }
+    50% { transform: translate(60px, 40px); }
+  }
+  @keyframes float2 {
+    0%, 100% { transform: translate(0, 0); }
+    50% { transform: translate(-50px, 60px); }
+  }
+  @keyframes float3 {
+    0%, 100% { transform: translate(0, 0); }
+    50% { transform: translate(40px, -50px); }
+  }
+
+  nav {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 22px 48px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    backdrop-filter: blur(6px);
+  }
+  nav .logo {
+    font-weight: 800;
+    font-size: 19px;
+    letter-spacing: -0.02em;
+  }
+  nav .logo span { color: var(--accent); }
+  nav .links a {
+    color: var(--muted);
+    text-decoration: none;
+    margin-left: 28px;
+    font-size: 14px;
+    font-weight: 500;
+    transition: color .15s;
+  }
+  nav .links a:hover { color: var(--text); }
+  nav .links a.signup-btn {
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    color: white;
+    padding: 9px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+  }
+
+  .hero {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    padding: 110px 20px 60px;
+    max-width: 760px;
+    margin: 0 auto;
+  }
+  .hero h1 {
+    font-size: 52px;
+    line-height: 1.1;
+    margin: 0 0 20px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    background: linear-gradient(120deg, #ffffff 0%, var(--accent) 50%, var(--accent-2) 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    animation: fadeIn 1s ease;
+  }
+  .hero p {
+    color: var(--muted);
+    font-size: 17px;
+    line-height: 1.7;
+    margin-bottom: 36px;
+    animation: fadeIn 1.2s ease;
+  }
+  .cta {
+    display: inline-block;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    color: white;
+    text-decoration: none;
+    padding: 16px 42px;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 15px;
+    box-shadow: 0 8px 30px rgba(79,124,255,0.35);
+    transition: transform .2s, box-shadow .2s;
+    animation: fadeIn 1.4s ease;
+  }
+  .cta:hover {
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 12px 40px rgba(79,124,255,0.5);
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .stats {
+    position: relative;
+    z-index: 2;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 20px;
+    max-width: 920px;
+    margin: 70px auto;
+    padding: 0 20px;
+  }
+  .stat-card {
+    background: rgba(22,28,44,0.6);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+    padding: 28px 20px;
+    text-align: center;
+    transition: transform .2s, border-color .2s;
+  }
+  .stat-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--accent);
+  }
+  .stat-card .value {
+    font-size: 32px;
+    font-weight: 800;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .stat-card .label {
+    color: var(--muted);
+    font-size: 13px;
+    margin-top: 8px;
+    font-weight: 500;
+  }
+
+  .about {
+    position: relative;
+    z-index: 2;
+    max-width: 920px;
+    margin: 0 auto 80px;
+    padding: 0 20px;
+  }
+  .about h2 {
+    font-size: 24px;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 40px;
+    color: var(--text);
+  }
+  .about-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 20px;
+  }
+  .about-card {
+    background: rgba(22,28,44,0.6);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+    padding: 26px 22px;
+    transition: transform .2s, border-color .2s;
+  }
+  .about-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--accent-2);
+  }
+  .about-card .num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    font-weight: 700;
+    font-size: 14px;
+    margin-bottom: 14px;
+  }
+  .about-card h3 { margin: 0 0 8px; font-size: 16px; }
+  .about-card p { margin: 0; color: var(--muted); font-size: 13.5px; line-height: 1.6; }
+
+  footer {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    color: var(--muted);
+    font-size: 12.5px;
+    padding: 30px 0 40px;
+  }
+</style>
+</head>
+<body>
+
+<div class="glow glow-1"></div>
+<div class="glow glow-2"></div>
+<div class="glow glow-3"></div>
+
+<nav>
+  <div class="logo">NPA <span>Predictor</span></div>
+  <div class="links">
+    {% if session.user_name %}
+      <a href="/predictor">Predictor</a>
+      <a href="/history">History</a>
+      <a href="/logout">Logout</a>
+    {% else %}
+      <a href="/login">Log In</a>
+      <a href="/signup" class="signup-btn">Sign Up</a>
+    {% endif %}
+  </div>
+</nav>
+
+<div class="hero">
+  <h1>Predict Loan Default Risk<br>Before It Happens</h1>
+  <p>An XGBoost-powered model that estimates the probability of a loan becoming a Non-Performing Asset, using borrower profile, credit history, and loan terms.</p>
+  {% if session.user_name %}
+    <a href="/predictor" class="cta">Get Started &rarr;</a>
+  {% else %}
+    <a href="/signup" class="cta">Get Started &rarr;</a>
+  {% endif %}
+</div>
+
+<div class="stats">
+  <div class="stat-card">
+    <div class="value">79.86%</div>
+    <div class="label">Model Accuracy</div>
+  </div>
+  <div class="stat-card">
+    <div class="value">XGBoost</div>
+    <div class="label">Algorithm Used</div>
+  </div>
+  <div class="stat-card">
+    <div class="value">{{ total }}</div>
+    <div class="label">Predictions Made</div>
+  </div>
+  <div class="stat-card">
+    <div class="value">{{ high_risk }}</div>
+    <div class="label">High Risk Flagged</div>
+  </div>
+</div>
+
+<div class="about">
+  <h2>How It Works</h2>
+  <div class="about-grid">
+    <div class="about-card">
+      <div class="num">1</div>
+      <h3>Enter Details</h3>
+      <p>Fill in loan amount, interest rate, borrower income, credit history, and other details on the predictor form.</p>
+    </div>
+    <div class="about-card">
+      <div class="num">2</div>
+      <h3>Model Predicts</h3>
+      <p>An XGBoost classifier, trained on 1.3M+ real loan records, estimates the probability of the loan becoming an NPA.</p>
+    </div>
+    <div class="about-card">
+      <div class="num">3</div>
+      <h3>View & Track</h3>
+      <p>See the risk result instantly, and revisit every past prediction on the History page.</p>
+    </div>
+  </div>
+</div>
+
+<footer>NPA Risk Predictor &middot; Powered by XGBoost</footer>
+
+</body>
+</html>

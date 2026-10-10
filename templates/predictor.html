@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>NPA Risk Predictor</title>
+<style>
+  :root {
+    --bg: #0f1420;
+    --card: #161c2c;
+    --card-border: #262e42;
+    --accent: #4f7cff;
+    --accent-2: #7c5cff;
+    --text: #e7ebf5;
+    --muted: #8a91a8;
+    --danger: #ff5c7a;
+    --safe: #38d996;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: radial-gradient(circle at top, #1a2138 0%, #0f1420 60%);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 40px 16px;
+  }
+  .wrap { max-width: 960px; margin: 0 auto; }
+  .top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    font-size: 13px;
+  }
+  .top-bar a { color: var(--muted); text-decoration: none; }
+  .top-bar a:hover { color: var(--text); }
+  header { text-align: center; margin-bottom: 32px; }
+  header h1 {
+    font-size: 32px; margin: 0 0 8px;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  header p { color: var(--muted); margin: 0; }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+    padding: 28px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 18px;
+  }
+  .field label {
+    display: block;
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .field input, .field select {
+    width: 100%;
+    background: #0f1420;
+    border: 1px solid var(--card-border);
+    border-radius: 10px;
+    padding: 10px 12px;
+    color: var(--text);
+    font-size: 14px;
+    outline: none;
+    transition: border-color .15s;
+  }
+  .field input:focus, .field select:focus {
+    border-color: var(--accent);
+  }
+  .section-title {
+    grid-column: 1 / -1;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+    margin: 18px 0 -4px;
+    font-weight: 600;
+  }
+  .submit-row { margin-top: 26px; text-align: center; }
+  button {
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    border: none;
+    color: white;
+    padding: 13px 36px;
+    font-size: 15px;
+    font-weight: 600;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: transform .15s, box-shadow .15s;
+  }
+  button:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(79,124,255,0.35); }
+  .result {
+    margin-top: 28px;
+    padding: 22px;
+    border-radius: 14px;
+    text-align: center;
+    border: 1px solid var(--card-border);
+  }
+  .result.high { background: rgba(255,92,122,0.1); border-color: var(--danger); }
+  .result.low { background: rgba(56,217,150,0.1); border-color: var(--safe); }
+  .result h2 { margin: 0 0 6px; font-size: 22px; }
+  .result.high h2 { color: var(--danger); }
+  .result.low h2 { color: var(--safe); }
+  .result .risk-value { font-size: 42px; font-weight: 700; margin: 8px 0; }
+  .result p { color: var(--muted); margin: 4px 0 0; font-size: 13px; }
+
+  .factors {
+    margin-top: 24px;
+    text-align: left;
+  }
+  .factors h3 {
+    font-size: 15px;
+    color: var(--text);
+    margin: 0 0 14px;
+    text-align: center;
+  }
+  .factor-card {
+    background: rgba(255,92,122,0.06);
+    border: 1px solid rgba(255,92,122,0.25);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+  }
+  .factor-card .factor-label {
+    font-weight: 600;
+    font-size: 13.5px;
+    color: var(--danger);
+    margin-bottom: 4px;
+  }
+  .factor-card .factor-suggestion {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+  .factor-card .factor-suggestion::before {
+    content: "💡 ";
+  }
+
+  footer { text-align: center; color: var(--muted); font-size: 12px; margin-top: 28px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top-bar">
+    <a href="/">&larr; Back to Home</a>
+    <span>
+      {% if session.user_name %}Hi, {{ session.user_name }} &middot; {% endif %}
+      <a href="/history">History</a> &middot;
+      <a href="/logout">Logout</a>
+    </span>
+  </div>
+
+  <header>
+    <h1>NPA Risk Predictor</h1>
+    <p>Enter loan and borrower details to estimate default (NPA) risk</p>
+  </header>
+
+  <div class="card">
+    <form action="/predict" method="POST">
+      <div class="grid">
+
+        <div class="section-title">Applicant Details</div>
+        <div class="field">
+          <label>Applicant Name</label>
+          <input type="text" name="applicant_name" value="{{ form_data.applicant_name if form_data else '' }}" placeholder="Enter full name" required>
+        </div>
+
+        <div class="section-title">Loan Details</div>
+        <div class="field">
+          <label>Loan Amount ($)</label>
+          <input type="number" step="any" name="loan_amnt" value="{{ form_data.loan_amnt if form_data else '' }}" required>
+        </div>
+        <div class="field">
+          <label>Term (months)</label>
+          <select name="term" required>
+            <option value="36" {% if form_data and form_data.term == '36' %}selected{% endif %}>36</option>
+            <option value="60" {% if form_data and form_data.term == '60' %}selected{% endif %}>60</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Interest Rate (%)</label>
+          <input type="number" step="any" name="int_rate" value="{{ form_data.int_rate if form_data else '' }}" required>
+        </div>
+        <div class="field">
+          <label>Monthly Installment ($)</label>
+          <input type="number" step="any" name="installment" value="{{ form_data.installment if form_data else '' }}" required>
+        </div>
+        <div class="field">
+          <label>Loan Grade</label>
+          <select name="grade" required>
+            {% set grades = ['A','B','C','D','E','F','G'] %}
+            {% for g in grades %}
+            <option {% if form_data and form_data.grade == g %}selected{% endif %}>{{ g }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="field">
+          <label>Loan Purpose</label>
+          <select name="purpose" required>
+            {% set purposes = [('debt_consolidation','Debt Consolidation'), ('credit_card','Credit Card'), ('home_improvement','Home Improvement'), ('major_purchase','Major Purchase'), ('medical','Medical'), ('small_business','Small Business'), ('other','Other')] %}
+            {% for val, label in purposes %}
+            <option value="{{ val }}" {% if form_data and form_data.purpose == val %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="section-title">Borrower Details</div>
+        <div class="field">
+          <label>Annual Income ($)</label>
+          <input type="number" step="any" name="annual_inc" value="{{ form_data.annual_inc if form_data else '' }}" required>
+        </div>
+        <div class="field">
+          <label>Employment Length</label>
+          <select name="emp_length" required>
+            {% set emps = ['< 1 year','1 year','2 years','3 years','4 years','5 years','6 years','7 years','8 years','9 years','10+ years','Unknown'] %}
+            {% for e in emps %}
+            <option {% if form_data and form_data.emp_length == e %}selected{% endif %}>{{ e }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="field">
+          <label>Home Ownership</label>
+          <select name="home_ownership" required>
+            {% set homes = ['RENT','MORTGAGE','OWN','OTHER'] %}
+            {% for h in homes %}
+            <option {% if form_data and form_data.home_ownership == h %}selected{% endif %}>{{ h }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="field">
+          <label>Income Verification</label>
+          <select name="verification_status" required>
+            {% set vers = ['Verified','Source Verified','Not Verified'] %}
+            {% for v in vers %}
+            <option value="{{ v }}" {% if form_data and form_data.verification_status == v %}selected{% endif %}>{{ v }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="field">
+          <label>Credit History (years)</label>
+          <input type="number" step="any" name="credit_history_years" value="{{ form_data.credit_history_years if form_data else '' }}" required>
+        </div>
+
+        <div class="section-title">Credit Profile</div>
+        <div class="field">
+          <label>Debt-to-Income Ratio (DTI)</label>
+          <input type="number" step="any" name="dti" value="{{ form_data.dti if form_data else '' }}" required>
+        </div>
+        <div class="field">
+          <label>Revolving Balance ($)</label>
+          <input type="number" step="any" name="revol_bal" value="{{ form_data.revol_bal if form_data else '' }}" required>
+        </div>
+        <div class="field">
+          <label>Revolving Utilization (%)</label>
+          <input type="number" step="any" name="revol_util" value="{{ form_data.revol_util if form_data else '' }}" required>
+        </div>
+        <div class="field">
+          <label>Open Credit Lines</label>
+          <input type="number" step="any" name="open_acc" value="{{ form_data.open_acc if form_data else '' }}" required>
+        </div>
+        <div class="field">
+          <label>Total Credit Lines</label>
+          <input type="number" step="any" name="total_acc" value="{{ form_data.total_acc if form_data else '' }}" required>
+        </div>
+        <div class="field">
+          <label>Delinquencies (last 2 yrs)</label>
+          <input type="number" step="any" name="delinq_2yrs" value="{{ form_data.delinq_2yrs if form_data else '' }}" required>
+        </div>
+        <div class="field">
+          <label>Public Records</label>
+          <input type="number" step="any" name="pub_rec" value="{{ form_data.pub_rec if form_data else '' }}" required>
+        </div>
+
+      </div>
+
+      <div class="submit-row">
+        <button type="submit">Predict NPA Risk</button>
+      </div>
+    </form>
+
+    {% if show_result %}
+    <div class="result {% if 'High' in result %}high{% else %}low{% endif %}">
+      <h2>{{ result }}</h2>
+      <div class="risk-value">{{ risk_percent }}%</div>
+      <p>Estimated probability of this loan becoming an NPA</p>
+
+      {% if top_factors %}
+      <div class="factors">
+        <h3>Why this loan was flagged High Risk</h3>
+        {% for factor in top_factors %}
+        <div class="factor-card">
+          <div class="factor-label">{{ factor.label }}</div>
+          <div class="factor-suggestion">{{ factor.suggestion }}</div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+
+  <footer>NPA Prediction Model &middot; XGBoost</footer>
+</div>
+</body>
+</html>
